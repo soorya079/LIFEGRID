@@ -1,0 +1,1 @@
+"""LIFEGRID automated tests."""

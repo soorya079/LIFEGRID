@@ -1,0 +1,1 @@
+﻿{"version":"2.0","routeKey":"GET /health","rawPath":"/health","rawQueryString":"","headers":{"host":"3x3299bnk6.execute-api.ap-south-1.amazonaws.com"},"requestContext":{"accountId":"692869638892","apiId":"3x3299bnk6","http":{"method":"GET","path":"/health","protocol":"HTTP/1.1"},"requestId":"test","routeKey":"GET /health","stage":"prod"},"isBase64Encoded":false}

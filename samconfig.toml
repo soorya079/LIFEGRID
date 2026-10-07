@@ -1,0 +1,21 @@
+version = 0.1
+
+[default]
+[default.global.parameters]
+stack_name = "LIFEGRID-stack"
+region = "ap-south-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+
+[default.deploy.parameters]
+stack_name = "LIFEGRID-stack"
+region = "ap-south-1"
+confirm_changeset = false
+capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
+resolve_s3 = true
+s3_prefix = "lifegrid"
+tags = "Project=LIFEGRID"
+
+[default.build.parameters]
+cached = false
+parallel = true

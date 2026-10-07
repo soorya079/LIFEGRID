@@ -1,0 +1,527 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Description: >
+  LIFEGRID-stack — Isolated, serverless AWS infrastructure for the LIFEGRID
+  flood early-action and emergency resource coordination MVP.
+  Account: 692869638892  Region: ap-south-1
+  DOES NOT touch CloudVault or CloudSentinel resources.
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Architectures: [x86_64]
+    Timeout: 30
+    MemorySize: 256
+    Environment:
+      Variables:
+        APP_ENV: aws
+        AWS_REGION_NAME: !Ref AWS::Region
+        REPORTS_TABLE: !Ref LifegridReportsTable
+        RESOURCES_TABLE: !Ref LifegridResourcesTable
+        EVENTS_TABLE: !Ref LifegridEventsTable
+        PROCESSED_EVENTS_TABLE: !Ref LifegridProcessedEventsTable
+        EVENT_BUS_NAME: !Ref LifegridEventBus
+    Layers:
+      - !Ref LifegridDepsLayer
+
+# ─── PARAMETERS ──────────────────────────────────────────────────────────────
+Parameters:
+  FrontendOrigin:
+    Type: String
+    Default: "*"
+    Description: >
+      Allowed CORS origin for the LIFEGRID frontend. Use the deployed
+      CloudFront or S3 website URL in production. Defaults to wildcard for
+      local development only.
+
+  LogRetentionDays:
+    Type: Number
+    Default: 7
+    AllowedValues: [1, 3, 5, 7, 14, 30]
+    Description: CloudWatch Logs retention period in days.
+
+# ─── RESOURCES ───────────────────────────────────────────────────────────────
+Resources:
+
+  # ── DynamoDB Tables ──────────────────────────────────────────────────────
+  LifegridReportsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LIFEGRID-Reports
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: report_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: report_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: LIFEGRID
+
+  LifegridResourcesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LIFEGRID-Resources
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: resource_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: resource_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: LIFEGRID
+
+  LifegridEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LIFEGRID-Events
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: event_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: event_id
+          KeyType: HASH
+      Tags:
+        - Key: Project
+          Value: LIFEGRID
+
+  LifegridProcessedEventsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: LIFEGRID-ProcessedEvents
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: idempotency_key
+          AttributeType: S
+      KeySchema:
+        - AttributeName: idempotency_key
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      Tags:
+        - Key: Project
+          Value: LIFEGRID
+
+  # ── EventBridge ──────────────────────────────────────────────────────────
+  LifegridEventBus:
+    Type: AWS::Events::EventBus
+    Properties:
+      Name: LIFEGRID-EventBus
+
+  LifegridReportCreatedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: LIFEGRID-ReportCreated
+      Description: Routes REPORT_CREATED events to the Risk Processor Lambda
+      EventBusName: !Ref LifegridEventBus
+      EventPattern:
+        source:
+          - lifegrid.api
+        detail-type:
+          - REPORT_CREATED
+      State: ENABLED
+      Targets:
+        - Id: RiskProcessorTarget
+          Arn: !GetAtt LifegridRiskProcessorFunction.Arn
+
+  LifegridRiskAssessedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: LIFEGRID-RiskAssessed
+      Description: Routes RISK_ASSESSED events to the Resource Processor Lambda
+      EventBusName: !Ref LifegridEventBus
+      EventPattern:
+        source:
+          - lifegrid.risk-processor
+        detail-type:
+          - RISK_ASSESSED
+      State: ENABLED
+      Targets:
+        - Id: ResourceProcessorTarget
+          Arn: !GetAtt LifegridResourceProcessorFunction.Arn
+
+  LifegridResourceShortageRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: LIFEGRID-ResourceShortage
+      Description: Routes RESOURCE_SHORTAGE events to the Notification Processor Lambda
+      EventBusName: !Ref LifegridEventBus
+      EventPattern:
+        source:
+          - lifegrid.resource-processor
+        detail-type:
+          - RESOURCE_SHORTAGE
+      State: ENABLED
+      Targets:
+        - Id: NotificationProcessorTarget
+          Arn: !GetAtt LifegridNotificationProcessorFunction.Arn
+
+  LifegridResourceAllocatedRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: LIFEGRID-ResourceAllocated
+      Description: Routes RESOURCE_ALLOCATED events to the Notification Processor Lambda
+      EventBusName: !Ref LifegridEventBus
+      EventPattern:
+        source:
+          - lifegrid.api
+        detail-type:
+          - RESOURCE_ALLOCATED
+      State: ENABLED
+      Targets:
+        - Id: NotificationAllocatedTarget
+          Arn: !GetAtt LifegridNotificationProcessorFunction.Arn
+
+  # ── Lambda Permission: EventBridge → Lambda ───────────────────────────────
+  LifegridRiskProcessorPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LifegridRiskProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LifegridReportCreatedRule.Arn
+
+  LifegridResourceProcessorPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LifegridResourceProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LifegridRiskAssessedRule.Arn
+
+  LifegridNotificationProcessorPermission1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LifegridNotificationProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LifegridResourceShortageRule.Arn
+
+  LifegridNotificationProcessorPermission2:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref LifegridNotificationProcessorFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LifegridResourceAllocatedRule.Arn
+
+  # ── Dependencies Layer ────────────────────────────────────────────────────
+  LifegridDepsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: LIFEGRID-deps
+      Description: Python dependencies for LIFEGRID Lambda functions
+      ContentUri: ../lambda/layer/
+      CompatibleRuntimes:
+        - python3.13
+      RetentionPolicy: Delete
+    Metadata:
+      BuildMethod: python3.13
+
+  # ── IAM Role ─────────────────────────────────────────────────────────────
+  LifegridLambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: LIFEGRID-LambdaExecutionRole
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LIFEGRID-DynamoDBAccess
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:DeleteItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:BatchGetItem
+                  - dynamodb:BatchWriteItem
+                Resource:
+                  - !GetAtt LifegridReportsTable.Arn
+                  - !GetAtt LifegridResourcesTable.Arn
+                  - !GetAtt LifegridEventsTable.Arn
+                  - !GetAtt LifegridProcessedEventsTable.Arn
+        - PolicyName: LIFEGRID-EventBridgePublish
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - !GetAtt LifegridEventBus.Arn
+      Tags:
+        - Key: Project
+          Value: LIFEGRID
+
+  # ── CloudWatch Log Groups (explicit retention) ────────────────────────────
+  LifegridApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/LIFEGRID-API
+      RetentionInDays: !Ref LogRetentionDays
+
+  LifegridRiskProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/LIFEGRID-RiskProcessor
+      RetentionInDays: !Ref LogRetentionDays
+
+  LifegridResourceProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/LIFEGRID-ResourceProcessor
+      RetentionInDays: !Ref LogRetentionDays
+
+  LifegridNotificationProcessorLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/LIFEGRID-NotificationProcessor
+      RetentionInDays: !Ref LogRetentionDays
+
+  # ── Lambda Functions ──────────────────────────────────────────────────────
+  LifegridApiFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - LifegridApiLogGroup
+    Properties:
+      FunctionName: LIFEGRID-API
+      Description: LIFEGRID REST API handler — reports, resources, health, and events
+      CodeUri: ../lambda/api/
+      Handler: handler.lambda_handler
+      Role: !GetAtt LifegridLambdaRole.Arn
+      Environment:
+        Variables:
+          FRONTEND_ORIGIN: !Ref FrontendOrigin
+      Events:
+        # Health
+        GetHealth:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /health
+            Method: GET
+        # Reports
+        PostReport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/reports
+            Method: POST
+        GetReports:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/reports
+            Method: GET
+        GetReport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/reports/{report_id}
+            Method: GET
+        PatchReportStatus:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/reports/{report_id}/status
+            Method: PATCH
+        DeleteReport:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/reports/{report_id}
+            Method: DELETE
+        # Resources
+        GetResources:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources
+            Method: GET
+        GetResourceSummary:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/summary
+            Method: GET
+        GetResourceShortages:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/shortages
+            Method: GET
+        GetAllocations:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/allocations
+            Method: GET
+        GetResource:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/{resource_id}
+            Method: GET
+        PostRequirements:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/requirements
+            Method: POST
+        PostMatch:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/match
+            Method: POST
+        PostAllocate:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/resources/allocate
+            Method: POST
+        # Zones / Risk / Simulation
+        GetZones:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/zones
+            Method: GET
+        PostRiskAnalyze:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/risk/analyze
+            Method: POST
+        PostSimulateFlood:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/simulation/flood
+            Method: POST
+        # Events
+        GetEvents:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/events
+            Method: GET
+        GetFailedEvents:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref LifegridHttpApi
+            Path: /api/v1/events/failed
+            Method: GET
+
+
+  LifegridRiskProcessorFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - LifegridRiskProcessorLogGroup
+    Properties:
+      FunctionName: LIFEGRID-RiskProcessor
+      Description: Processes REPORT_CREATED events — runs risk assessment and emits RISK_ASSESSED
+      CodeUri: ../lambda/risk_processor/
+      Handler: handler.lambda_handler
+      Role: !GetAtt LifegridLambdaRole.Arn
+
+  LifegridResourceProcessorFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - LifegridResourceProcessorLogGroup
+    Properties:
+      FunctionName: LIFEGRID-ResourceProcessor
+      Description: Processes RISK_ASSESSED events — calculates shortages and emits RESOURCE_SHORTAGE
+      CodeUri: ../lambda/resource_processor/
+      Handler: handler.lambda_handler
+      Role: !GetAtt LifegridLambdaRole.Arn
+
+  LifegridNotificationProcessorFunction:
+    Type: AWS::Serverless::Function
+    DependsOn:
+      - LifegridNotificationProcessorLogGroup
+    Properties:
+      FunctionName: LIFEGRID-NotificationProcessor
+      Description: Processes RESOURCE_SHORTAGE and RESOURCE_ALLOCATED events — logs and records status
+      CodeUri: ../lambda/notification_processor/
+      Handler: handler.lambda_handler
+      Role: !GetAtt LifegridLambdaRole.Arn
+
+
+  # ── API Gateway (HTTP API v2) ─────────────────────────────────────────────
+  LifegridHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: prod
+      Description: LIFEGRID HTTP API — flood response coordination MVP
+      CorsConfiguration:
+        AllowOrigins:
+          - !Ref FrontendOrigin
+        AllowMethods:
+          - GET
+          - POST
+          - PATCH
+          - DELETE
+          - OPTIONS
+        AllowHeaders:
+          - Content-Type
+          - Accept
+        MaxAge: 300
+
+# ─── OUTPUTS ─────────────────────────────────────────────────────────────────
+Outputs:
+  ApiUrl:
+    Description: LIFEGRID API Gateway endpoint URL
+    Value: !Sub "https://${LifegridHttpApi}.execute-api.${AWS::Region}.amazonaws.com/prod"
+    Export:
+      Name: LIFEGRID-ApiUrl
+
+  EventBusName:
+    Description: LIFEGRID EventBridge bus name
+    Value: !Ref LifegridEventBus
+    Export:
+      Name: LIFEGRID-EventBusName
+
+  EventBusArn:
+    Description: LIFEGRID EventBridge bus ARN
+    Value: !GetAtt LifegridEventBus.Arn
+    Export:
+      Name: LIFEGRID-EventBusArn
+
+  ReportsTableName:
+    Description: LIFEGRID DynamoDB reports table
+    Value: !Ref LifegridReportsTable
+    Export:
+      Name: LIFEGRID-ReportsTable
+
+  ResourcesTableName:
+    Description: LIFEGRID DynamoDB resources table
+    Value: !Ref LifegridResourcesTable
+    Export:
+      Name: LIFEGRID-ResourcesTable
+
+  StackRegion:
+    Description: Deployment region
+    Value: !Ref AWS::Region
+
+  StackAccount:
+    Description: Deployment account
+    Value: !Ref AWS::AccountId

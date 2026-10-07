@@ -1,0 +1,1 @@
+# LIFEGRID API Lambda package

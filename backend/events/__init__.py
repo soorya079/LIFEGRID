@@ -1,0 +1,1 @@
+"""Event contracts and local/AWS event bus implementations."""

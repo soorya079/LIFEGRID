@@ -1,0 +1,15 @@
+[
+  {"resource_id":"RES-WAT-A","type":"WATER","name":"North Relief Water Hub","latitude":19.078,"longitude":72.879,"available_quantity":42000,"unit":"litres","capacity":60000,"status":"AVAILABLE"},
+  {"resource_id":"RES-WAT-B","type":"WATER","name":"Central Water Depot","latitude":19.092,"longitude":72.894,"available_quantity":28000,"unit":"litres","capacity":40000,"status":"LIMITED"},
+  {"resource_id":"RES-WAT-C","type":"WATER","name":"East Water Point","latitude":19.12,"longitude":72.92,"available_quantity":16000,"unit":"litres","capacity":30000,"status":"AVAILABLE"},
+  {"resource_id":"RES-FOD-A","type":"FOOD","name":"North Meal Distribution Hub","latitude":19.08,"longitude":72.881,"available_quantity":8400,"unit":"kits","capacity":12000,"status":"AVAILABLE"},
+  {"resource_id":"RES-FOD-B","type":"FOOD","name":"Central Food Store","latitude":19.095,"longitude":72.899,"available_quantity":6200,"unit":"kits","capacity":10000,"status":"LIMITED"},
+  {"resource_id":"RES-MED-A","type":"MEDICINE","name":"Community Medical Depot","latitude":19.09,"longitude":72.89,"available_quantity":1100,"unit":"units","capacity":2000,"status":"AVAILABLE"},
+  {"resource_id":"RES-MED-B","type":"MEDICINE","name":"East Mobile Medical Store","latitude":19.115,"longitude":72.918,"available_quantity":450,"unit":"units","capacity":900,"status":"LIMITED"},
+  {"resource_id":"RES-SHL-A","type":"SHELTER","name":"North Assembly Shelter","latitude":19.082,"longitude":72.883,"available_quantity":900,"unit":"spaces","capacity":1200,"status":"AVAILABLE"},
+  {"resource_id":"RES-SHL-B","type":"SHELTER","name":"Central School Shelter","latitude":19.097,"longitude":72.9,"available_quantity":650,"unit":"spaces","capacity":1000,"status":"LIMITED"},
+  {"resource_id":"RES-SHL-C","type":"SHELTER","name":"East Community Shelter","latitude":19.117,"longitude":72.916,"available_quantity":500,"unit":"spaces","capacity":800,"status":"AVAILABLE"},
+  {"resource_id":"RES-AMB-A","type":"AMBULANCE","name":"North Ambulance Station","latitude":19.079,"longitude":72.88,"available_quantity":5,"unit":"vehicles","capacity":8,"status":"AVAILABLE"},
+  {"resource_id":"RES-AMB-B","type":"AMBULANCE","name":"Central Ambulance Station","latitude":19.096,"longitude":72.898,"available_quantity":4,"unit":"vehicles","capacity":6,"status":"LIMITED"},
+  {"resource_id":"RES-AMB-C","type":"AMBULANCE","name":"East Ambulance Station","latitude":19.118,"longitude":72.919,"available_quantity":3,"unit":"vehicles","capacity":5,"status":"AVAILABLE"}
+]

@@ -1,0 +1,75 @@
+{
+  "data_label": "SYNTHETIC DEMO DATA - all zones and values are fictional; not government or live emergency data.",
+  "zones": [
+    {
+      "zone_id": "ZONE-A",
+      "name": "Zone A",
+      "latitude": 19.0760,
+      "longitude": 72.8777,
+      "population": 8000,
+      "population_density": 900,
+      "rainfall_mm": 25,
+      "river_level": "LOW",
+      "road_accessibility": 90,
+      "shelter_capacity": 85,
+      "medical_capacity": 90,
+      "historical_risk": 10
+    },
+    {
+      "zone_id": "ZONE-B",
+      "name": "Zone B",
+      "latitude": 19.0860,
+      "longitude": 72.8877,
+      "population": 12000,
+      "population_density": 5000,
+      "rainfall_mm": 100,
+      "river_level": "MEDIUM",
+      "road_accessibility": 60,
+      "shelter_capacity": 60,
+      "medical_capacity": 70,
+      "historical_risk": 45
+    },
+    {
+      "zone_id": "ZONE-C",
+      "name": "Zone C",
+      "latitude": 19.0960,
+      "longitude": 72.8977,
+      "population": 18000,
+      "population_density": 8000,
+      "rainfall_mm": 210,
+      "river_level": "HIGH",
+      "road_accessibility": 40,
+      "shelter_capacity": 35,
+      "medical_capacity": 40,
+      "historical_risk": 70
+    },
+    {
+      "zone_id": "ZONE-D",
+      "name": "Zone D",
+      "latitude": 19.1060,
+      "longitude": 72.9077,
+      "population": 24000,
+      "population_density": 10000,
+      "rainfall_mm": 300,
+      "river_level": "CRITICAL",
+      "road_accessibility": 10,
+      "shelter_capacity": 10,
+      "medical_capacity": 15,
+      "historical_risk": 95
+    },
+    {
+      "zone_id": "ZONE-E",
+      "name": "Zone E",
+      "latitude": 19.1160,
+      "longitude": 72.9177,
+      "population": 10000,
+      "population_density": 3500,
+      "rainfall_mm": 150,
+      "river_level": "MEDIUM",
+      "road_accessibility": 75,
+      "shelter_capacity": 45,
+      "medical_capacity": 65,
+      "historical_risk": 35
+    }
+  ]
+}

@@ -1,0 +1,71 @@
+[
+  {
+    "report_id": "RPT-DEMO-001",
+    "category": "FLOOD",
+    "title": "Water entering ground-floor homes",
+    "description": "Synthetic demo report: water is entering several ground-floor homes near the canal.",
+    "latitude": 19.096,
+    "longitude": 72.8977,
+    "severity": 4,
+    "people_affected": 120,
+    "timestamp": "2026-09-26T08:20:00Z",
+    "status": "VERIFIED",
+    "source": "SIMULATION",
+    "priority_score": 76,
+    "priority_level": "HIGH",
+    "priority_explanation": [
+      "Synthetic seeded demonstration record; not independently verified."
+    ],
+    "location_risk_score": 70,
+    "possible_duplicate": false,
+    "duplicate_report_ids": [],
+    "status_history": [],
+    "data_label": "SYNTHETIC DEMO DATA"
+  },
+  {
+    "report_id": "RPT-DEMO-002",
+    "category": "MEDICAL",
+    "title": "Resident needs medical assistance",
+    "description": "Synthetic demo report: one resident needs assistance reaching medical care.",
+    "latitude": 19.086,
+    "longitude": 72.8877,
+    "severity": 3,
+    "people_affected": 2,
+    "timestamp": "2026-09-26T08:45:00Z",
+    "status": "RECEIVED",
+    "source": "SIMULATION",
+    "priority_score": 66,
+    "priority_level": "HIGH",
+    "priority_explanation": [
+      "Synthetic seeded demonstration record; not independently verified."
+    ],
+    "location_risk_score": 40,
+    "possible_duplicate": false,
+    "duplicate_report_ids": [],
+    "status_history": [],
+    "data_label": "SYNTHETIC DEMO DATA"
+  },
+  {
+    "report_id": "RPT-DEMO-003",
+    "category": "ROAD_BLOCK",
+    "title": "Road access obstructed by floodwater",
+    "description": "Synthetic demo report: floodwater blocks a local access road near the market.",
+    "latitude": 19.106,
+    "longitude": 72.9077,
+    "severity": 3,
+    "people_affected": 45,
+    "timestamp": "2026-09-26T09:10:00Z",
+    "status": "VALIDATING",
+    "source": "SIMULATION",
+    "priority_score": 58,
+    "priority_level": "MEDIUM",
+    "priority_explanation": [
+      "Synthetic seeded demonstration record; not independently verified."
+    ],
+    "location_risk_score": 48,
+    "possible_duplicate": false,
+    "duplicate_report_ids": [],
+    "status_history": [],
+    "data_label": "SYNTHETIC DEMO DATA"
+  }
+]
