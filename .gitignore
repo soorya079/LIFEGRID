@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Allow the frontend production env (contains only a public HTTPS URL, not secrets)
+!frontend/.env.production
 
 # Python
 .venv/

@@ -40,11 +40,9 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
-        env:
-          # Injected from GitHub repository secret VITE_API_BASE_URL.
-          # Set this secret in: Settings → Secrets and variables → Actions → New repository secret
-          # Value: https://3x3299bnk6.execute-api.ap-south-1.amazonaws.com/prod
-          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        # Vite automatically reads frontend/.env.production during `npm run build`.
+        # That file sets VITE_API_BASE_URL to the deployed AWS API Gateway URL.
+        # No secrets needed — the API Gateway URL is a public HTTPS endpoint.
         run: npm run build
 
       - name: Setup GitHub Pages

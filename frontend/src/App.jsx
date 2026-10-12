@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { getHealth } from './api/client'
 import Header from './components/Header'
 import LoadingState from './components/LoadingState'
@@ -44,7 +44,7 @@ function OperationsApp() {
           </Suspense>
         </main>
         <footer className="workspace-footer">
-          <span>LIFEGRID LOCAL OPERATIONS WORKSPACE</span>
+          <span>LIFEGRID OPERATIONS WORKSPACE</span>
           <span>DECISION SUPPORT ONLY · VERIFY WITH OFFICIAL SOURCES</span>
         </footer>
       </div>
@@ -53,5 +53,5 @@ function OperationsApp() {
 }
 
 export default function App() {
-  return <BrowserRouter><OperationsApp /></BrowserRouter>
+  return <HashRouter><OperationsApp /></HashRouter>
 }
