@@ -40,6 +40,11 @@ jobs:
 
       - name: Build frontend
         working-directory: frontend
+        env:
+          # Injected from GitHub repository secret VITE_API_BASE_URL.
+          # Set this secret in: Settings → Secrets and variables → Actions → New repository secret
+          # Value: https://3x3299bnk6.execute-api.ap-south-1.amazonaws.com/prod
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
         run: npm run build
 
       - name: Setup GitHub Pages

@@ -1,5 +1,4 @@
-const DEFAULT_API_BASE_URL = 'http://127.0.0.1:8000'
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || DEFAULT_API_BASE_URL).replace(/\/+$/, '')
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '')
 const STATUS_MESSAGES = {
   400: 'The request could not be accepted. Check the submitted values.',
   401: 'Authentication is required for this request.',
@@ -32,7 +31,8 @@ async function request(path, options = {}) {
       },
     })
   } catch {
-    throw new ApiError(`Cannot reach the local API at ${API_BASE_URL}. Start the FastAPI backend and retry.`, 0, 'NETWORK_ERROR')
+    console.error(`[LIFEGRID] Network error: Could not reach API at ${API_BASE_URL}`)
+    throw new ApiError('Backend service is temporarily unavailable. Please try again in a moment.', 0, 'NETWORK_ERROR')
   }
 
   let payload

@@ -56,14 +56,19 @@ app = FastAPI(
     ),
     version="0.1.0",
 )
+_raw_origins = os.getenv(
+    "LIFEGRID_FRONTEND_ORIGIN",
+    "http://127.0.0.1:5173,http://localhost:5173",
+)
+# Support comma-separated origins (e.g. "https://soorya079.github.io,http://127.0.0.1:5173")
+_allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        os.getenv("LIFEGRID_FRONTEND_ORIGIN", "http://127.0.0.1:5173")
-    ],
+    allow_origins=_allowed_origins,
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "DELETE"],
-    allow_headers=["Content-Type"],
+    allow_headers=["Content-Type", "Accept"],
 )
 
 

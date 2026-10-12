@@ -15,6 +15,9 @@ capabilities = "CAPABILITY_IAM CAPABILITY_NAMED_IAM"
 resolve_s3 = true
 s3_prefix = "lifegrid"
 tags = "Project=LIFEGRID"
+# FrontendOrigin: the GitHub Pages URL of the deployed frontend.
+# This sets CORS on the API Gateway to allow requests from your frontend.
+parameter_overrides = "FrontendOrigin=https://soorya079.github.io"
 
 [default.build.parameters]
 cached = false

@@ -29,10 +29,10 @@ Globals:
 Parameters:
   FrontendOrigin:
     Type: String
-    Default: "*"
+    Default: "https://soorya079.github.io"
     Description: >
       Allowed CORS origin for the LIFEGRID frontend. Use the deployed
-      CloudFront or S3 website URL in production. Defaults to wildcard for
+      GitHub Pages URL in production. Defaults to wildcard for
       local development only.
 
   LogRetentionDays:
