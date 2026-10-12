@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: lifegrid-api
+    runtime: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: LIFEGRID_FRONTEND_ORIGIN
+        value: https://soorya079.github.io,http://127.0.0.1:5173,http://localhost:5173
+      - key: APP_ENV
+        value: production

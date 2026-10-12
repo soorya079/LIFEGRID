@@ -20,7 +20,7 @@ export default function Header({ apiStatus, onMenuClick }) {
       <div className="topbar-title"><span className="topbar-section">{section}</span><h1>{title}</h1></div>
       <div className="topbar-meta">
         <span className="demo-tag"><span /> DEMO DATA</span>
-        <span className={`api-status api-${apiStatus}`}><span className="status-dot" />{apiStatus === 'connected' ? 'API CONNECTED' : apiStatus === 'offline' ? 'API OFFLINE' : 'CHECKING API'}</span>
+        <span className={`api-status api-${apiStatus}`}><span className="status-dot" />{apiStatus === 'connected' ? 'API ONLINE' : apiStatus === 'offline' ? 'API OFFLINE' : 'CHECKING API'}</span>
         <span className="topbar-date">{dateLabel}</span>
       </div>
     </header>
